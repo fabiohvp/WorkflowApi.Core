@@ -17,9 +17,9 @@ jobs:
         dotnet-version: 3.1.301
     - name: Create Nuget Package
       run: dotnet pack -c Release /p:Version=${{ github.events.release.tag_name }} /p:PackageReleaseNotes="See https://github.com/fabiohvp/WorkflowApi.Core/release/tag/${{ github.events.release.tag_name }}"
-      working-directory: .
+      working-directory: ./
     - name: Upload artifacts
       uses: actions/upload-artifact@v1
       with:
         name: packages
-        path: "**/*.nupkg"
+        path: ./WorkflowApi.Core/bin/Release/WorkflowApi.Core.${{ github.events.release.tag_name }}.nupkg
