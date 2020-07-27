@@ -18,7 +18,6 @@ namespace WorkflowApi.Core
         public virtual Func<DbContext> DbContextFactory { get; protected set; }
         public virtual Func<Exception, object> FormatException { get; set; }
         public virtual List<IObserver<object>> Observers { get; set; }
-        public virtual Func<TypeCreator> TypeCreatorFactory { get; protected set; }
         public virtual ConcurrentQueue<Response> Values { get; set; }
         public virtual Func<string, object[], Type, IWorkflow> WorkflowFactory { get; protected set; }
 
@@ -27,10 +26,9 @@ namespace WorkflowApi.Core
         /// </summary>
         /// <param name="contextFactory">Method that returns a DbContext instance</param>
         /// <param name="workflowFactory">Method that receives the workflow name (string) and arguments (object[]) and must return an instance that implements IWorkflow interface</param>
-        public Processor(Func<TypeCreator> typeCreatorFactory, Func<DbContext> dbContextFactory,Func<string, object[], Type, IWorkflow> workflowFactory, Func<Exception, object> formatException = default)
+        public Processor(Func<DbContext> dbContextFactory,Func<string, object[], Type, IWorkflow> workflowFactory, Func<Exception, object> formatException = default)
         {
             DbContextFactory = dbContextFactory;
-            TypeCreatorFactory = typeCreatorFactory;
             WorkflowFactory = workflowFactory;
             Observers = new List<IObserver<object>>();
             Values = new ConcurrentQueue<Response>();
@@ -64,7 +62,7 @@ namespace WorkflowApi.Core
         public virtual object ProcessRequest(IRequest request, IDictionary<string, StringValues> headers, DbContext dbContext, object data = default)
         {
             var workflow = WorkflowFactory(request.Run, request.Args, data?.GetType());
-            workflow.OnSetup(dbContext, request, TypeCreatorFactory());
+            workflow.OnSetup(dbContext, request);
             workflow.OnAuthorize(headers);
             return workflow.Execute(data);
         }
@@ -118,7 +116,7 @@ namespace WorkflowApi.Core
             {
                 Task.Run(() =>
                 {
-                    var workflowApi = new Processor(TypeCreatorFactory, DbContextFactory, WorkflowFactory, FormatException);
+                    var workflowApi = new Processor(DbContextFactory, WorkflowFactory, FormatException);
                     workflowApi.Fire(requests, headers, dbContext);
                 });
             }
@@ -208,7 +206,6 @@ namespace WorkflowApi.Core
     public interface IProcessor
     {
         Func<Exception, object> FormatException { get; set; }
-        Func<TypeCreator> TypeCreatorFactory { get; }
         ConcurrentQueue<Response> Values { get; set; }
         Func<string, object[], Type, IWorkflow> WorkflowFactory { get; }
 

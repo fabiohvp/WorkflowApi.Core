@@ -11,13 +11,11 @@ namespace WorkflowApi.Core.Workflows
 	{
 		public virtual DbContext DbContext { get; set; }
 		public virtual IRequest Request { get; set; }
-		public virtual TypeCreator TypeCreator { get; set; }
 
-		public virtual void OnSetup(DbContext dbContext, IRequest request, TypeCreator typeCreator)
+		public virtual void OnSetup(DbContext dbContext, IRequest request)
 		{
 			DbContext = dbContext;
 			Request = request;
-			TypeCreator = typeCreator;
 		}
 
 		public virtual void OnAuthorize(IDictionary<string, StringValues> headers)
@@ -82,7 +80,7 @@ namespace WorkflowApi.Core.Workflows
 
 	public interface IWorkflow
 	{
-		void OnSetup(DbContext dbContext, IRequest request, TypeCreator typeCreator);
+		void OnSetup(DbContext dbContext, IRequest request);
 
 		void OnAuthorize(IDictionary<string, StringValues> headers);
 
